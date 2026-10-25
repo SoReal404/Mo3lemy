@@ -43,6 +43,8 @@ If the input is an Arabic sentence or Arabic grammar (إعراب) question, set 
 
 const arabicSpacingPrompt = `For every Arabic string, put one ordinary visible space between each separate word. Never concatenate words in answer, explanation, spokenExplanation, options, sourceText, words[].pos, words[].irab, words[].why, or words[].whyEn. Keep Arabic word order intact.`;
 
+const optionCheckPrompt = `For every multiple-choice problem, independently solve the problem first, then match the computed result to the exact option text. Never guess a choice label from its position. Transcribe and simplify the whole integrand before integrating; for real u, ln(e^u)=u. Do not integrate only part of a composite integrand. For definite or indefinite integrals, differentiate each candidate antiderivative and compare it with the original integrand, including signs and constants. Check algebraic identities before selecting. Add top-level "correctOption" with the exact option label, or null when there are no choices. Make "answer" begin with that same label and reproduce the exact matching option. Verify that answer, correctOption, and the corresponding option all agree before returning JSON.`;
+
 const stepsPrompt = ` STEP FORMAT (math): there is no math branch to pick; you choose the tools. Every step object must be {"title":"short","rule":"name the rule or principle applied in this step","latex":"the equation at this step in LaTeX (e.g. \\\\frac{dy}{dx}=3\\\\cdot6x^{6-1}=18x^{5})","note":"one or two sentences: what changed in this step and WHY (name the rule, show the arithmetic)","symbols":[{"sym":"LaTeX of a symbol/number that appears","why":"why it is there / what it means"}],"scene":{...}}. Give 2-3 symbols per step that a student might not understand. Show EVERY algebraic transformation as its own step; never skip arithmetic. "scene" is optional per step and drives the graph: {"type":"function|derivative|integral","expression":"...","derivative":"...","a":number,"min":number,"max":number,"value":number,"legend":[{"c":"f|d|t","text":"what this drawn line/area MEANS in this problem"}],"caption":"one sentence telling the student what the graph shows at THIS step and how it connects to the algebra","answers":[{"x":number,"label":"short label"}] (put a marker where the final answer lives on the x-axis: roots, the evaluation point, an upper limit; always include it in the final step's scene),"notes":[{"x":number,"y":number,"text":"short note pinned on the graph"}]}. Only add a scene when the graph genuinely clarifies that step; each scene must change what is shown (different function, point or region). Use the simple syntax (x, ^, *, sin, cos, tan, sqrt, ln, exp, pi).`;
 
 const chemPrompt = ` CHEMISTRY: prioritize exam practice in iron and metallurgy; qualitative analysis (carbonate, sulfate, halide, nitrate and phosphate tests); volumetric analysis and titration; ionic equilibrium (Kc, Kw, pH, Ka, Kb, hydrolysis, Ksp); electrochemistry (half-reactions, cells, electrolysis, Faraday laws); and organic conversions (alcohols, aldehydes, ketones, acids, esters, aromatics). For any chemistry question, set subject="chemistry" and visual {"type":"chem"}. For a non-reaction problem, set chemistry.labType to titration, equilibrium, electrochemistry, organic, or metallurgy and include a lab object: titration uses acidM, baseM, acidVolumeMl, baseMaxMl and acid/base labels; equilibrium uses Kc and species with formula, initial concentration, signed change, coefficient and side; electrochemistry uses anode/cathode names and reduction potentials; organic/metallurgy uses ordered stages with equations and explanations. Include exact known values only; use null when absent. For qualitative tests, use labType qualitative with the tested ion, reagent, observation, and confirmatory test. If the question is about a reaction, compounds, gases, precipitates, acids/bases, redox, balancing, etc., set "subject":"chemistry","problemType":"reaction", visual {"type":"chem"}, options [] and add "chemistry":{"type":"short reaction class","reactants":[{"formula":"ASCII formula e.g. Ca(OH)2","coef":number,"state":"s|l|g|aq","name":"..."}],"products":[...same],"obs":{"from":"#hex liquid colour before","to":"#hex colour after","solid":{"color":"#hex","label":"…"}|null,"precipitate":{"color":"#hex","label":"…"}|null,"gas":{"formula":"CO2","label":"CO₂ bubbles — gas evolved"}|null,"heat":"exo|endo|none","liquidLabel":"…"},"elements":[{"sym":"Ca","name":"Calcium","z":20,"why":"its role in THIS reaction"}],"gasTest":"how to identify the gas / precipitate, if any"}. Coefficients MUST balance (the app verifies atom counts). Use real, accurate colours and observations. Steps: unbalanced equation, balancing, why it happens, identify gas/precipitate; use \\\\rightarrow, \\\\uparrow, \\\\downarrow in latex. If there is no reaction, set coefficients anyway to the best-known reaction and say so in the explanation.`;
@@ -70,16 +72,44 @@ function getProviderStatus(error) {
 
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 
+function normalizeChoiceText(value) {
+  return String(value || '').toLowerCase()
+    .replace(/\\(?:d?frac)\{([^{}]+)\}\{([^{}]+)\}/g, '($1)/($2)')
+    .replace(/\\(?:left|right)\b/g, '')
+    .replace(/\\(sin|cos|tan|ln|log|pi)\b/g, '$1')
+    .replace(/\\(?:cdot|times)/g, '*')
+    .replace(/[²]/g, '^2').replace(/[³]/g, '^3')
+    .replace(/[−–—]/g, '-').replace(/[×·]/g, '*').replace(/÷/g, '/')
+    .replace(/[{}\\$]/g, '').replace(/[\s()]/g, '');
+}
+
+function alignAnswerOption(data) {
+  if (!Array.isArray(data.options) || !data.options.length) return;
+  const answer = String(data.answer || '').trim();
+  const prefix = answer.match(/^(?:(?:the\s+)?(?:correct\s+)?(?:answer|option|choice)\s*(?:is\s*)?)?\(?([a-d])\)?\s*(?:[).:：—–-]\s*|\s+)/i);
+  const answerBody = prefix ? answer.slice(prefix[0].length).trim() : answer;
+  const normalizedAnswer = normalizeChoiceText(answerBody);
+  const exactMatch = normalizedAnswer && data.options.find(option => normalizeChoiceText(option?.text) === normalizedAnswer);
+  const containedMatches = normalizedAnswer ? data.options.filter(option => { const text = normalizeChoiceText(option?.text); return text.length > 2 && normalizedAnswer.includes(text); }) : [];
+  const declaredLabel = String(data.correctOption || '').trim().replace(/[).:：]$/, '').toUpperCase();
+  const choice = exactMatch || (containedMatches.length === 1 ? containedMatches[0] : null) || data.options.find(option => String(option?.label || '').trim().replace(/[).:：]$/, '').toUpperCase() === declaredLabel);
+  if (!choice) return;
+  const label = String(choice.label || '').trim().replace(/[).:：]$/, '').toUpperCase();
+  data.correctOption = label;
+  if (exactMatch || containedMatches.length === 1 || !prefix || prefix[1].toUpperCase() !== label) data.answer = `${label}) ${choice.text}`;
+}
+
 async function generateLesson(ai, model, { file, text, hint }) {
   const parts = [];
   if (file) parts.push({ inlineData: { mimeType: file.mimetype, data: file.buffer.toString('base64') } });
   if (text) parts.push({ text: `Student-confirmed question (use this exact question; do not select another problem from other image content):\n"""${text}"""` });
   const result = await ai.models.generateContent({
     model,
-    contents: [...parts, { text: prompt + detectPrompt + arabicSpacingPrompt + stepsPrompt + chemPrompt + (hint && hint !== 'auto' ? ` The student selected the subject: ${hint}.` : '') }],
+    contents: [...parts, { text: prompt + detectPrompt + arabicSpacingPrompt + optionCheckPrompt + stepsPrompt + chemPrompt + (hint && hint !== 'auto' ? ` The student selected the subject: ${hint}.` : '') }],
     config: { responseMimeType: 'application/json' }
   });
   const data = JSON.parse(result.text);
+  alignAnswerOption(data);
   if (data.subject === 'chemistry' || data.visual?.type === 'chem') {
     const c = data.chemistry, supportedLabs = ['reaction','qualitative','titration','equilibrium','electrochemistry','organic','metallurgy'];
     if (!c || !supportedLabs.includes(c.labType || 'reaction')) throw new Error('Could not identify the chemistry lab for this question. Try a clearer image.');

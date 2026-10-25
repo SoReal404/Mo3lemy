@@ -67,3 +67,4 @@ body[data-subject=arabic] .option-value,body[data-subject=arabic] .option-reason
 .step-note{margin:6px 0 0;padding-left:12px;border-left:2px solid #ec8866;font-size:13px;line-height:1.6;color:#cfd9c8}.step-note span{font:500 9px 'DM Mono',monospace;letter-spacing:.12em;color:#ec8866;margin-right:8px}
 .sym-row{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}.sym{display:inline-flex;align-items:center;gap:8px;padding:4px 10px;border-radius:99px;background:#ffffff0d;border:1px solid #ffffff1c;font-size:12px;color:#c9d4c2}.sym code{font-family:inherit;color:#f1f5ea}.sym em{font-style:normal;color:#aab8a6}
 .katex{font-size:1.02em}
+.option.correct{border-color:#6fbd86!important;background:#274232!important;box-shadow:inset 3px 0 #6fbd86,0 0 0 1px #6fbd8640}.option.correct .option-letter{color:#a4e2af}
