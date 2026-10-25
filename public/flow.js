@@ -1,6 +1,7 @@
 // Image confirmation flow: read first, let the student choose/correct, then solve.
 (()=>{
   const $=id=>document.getElementById(id),button=$('solve-button'),panel=$('question-review'),input=$('file-input');
+  const parseApiJson=async response=>{const type=response.headers.get('content-type')||'';if(!type.includes('application/json')){await response.text();if(response.status===404)throw new Error('The Vercel site is serving static files, but its Express API is not deployed. Redeploy the latest GitHub commit with Express enabled.');throw new Error(`The API returned a non-JSON response (HTTP ${response.status}). Check the latest deployment logs.`)}return response.json()};
   let questions=[],selected=0;
   button.querySelector('span').textContent='Read image questions';
   const reset=()=>{questions=[];selected=0;panel.hidden=true;panel.replaceChildren();button.querySelector('span').textContent='Read image questions'};
@@ -25,14 +26,14 @@
   };
   const solveOriginalImage=async()=>{
     button.querySelector('span').textContent='Reading the full image…';document.body.classList.remove('intake');document.querySelector('.lesson').hidden=false;$('lesson-content').innerHTML='<div class="loading"><div class="loading-orbit"></div><p>Reading the full image and working through the question…</p></div>';
-    const fd=new FormData();fd.append('subject',window.subj||'auto');fd.append('image',input.files[0]);const response=await fetch('/api/analyze',{method:'POST',body:fd}),result=await response.json();if(!response.ok)throw new Error(result.error||'Something went wrong.');render(result);
+    const fd=new FormData();fd.append('subject',window.subj||'auto');fd.append('image',input.files[0]);const response=await fetch('/api/analyze',{method:'POST',body:fd}),result=await parseApiJson(response);if(!response.ok)throw new Error(result.error||'Something went wrong.');render(result);
     if(result.mode==='demo')notify('Demo lesson shown. Add a Gemini key to analyze your image.');else{$('mode-pill').classList.add('live');$('mode-pill').innerHTML='<i></i> GEMINI ACTIVE'}
   };
   button.onclick=async()=>{
     if(!input.files[0]){notify('Upload a photo of your question first.');return}
     button.disabled=true;
     try{
-      if(!questions.length){button.querySelector('span').textContent='Reading the image…';const fd=new FormData();fd.append('image',input.files[0]);const response=await fetch('/api/read-image',{method:'POST',body:fd}),data=await response.json();if(!response.ok)throw new Error(data.error||'Could not read this image.');const detected=Array.isArray(data.questions)?data.questions:[];if(!detected.length){await solveOriginalImage();return}showQuestions(detected);return}
+      if(!questions.length){button.querySelector('span').textContent='Reading the image…';const fd=new FormData();fd.append('image',input.files[0]);const response=await fetch('/api/read-image',{method:'POST',body:fd}),data=await parseApiJson(response);if(!response.ok)throw new Error(data.error||'Could not read this image.');const detected=Array.isArray(data.questions)?data.questions:[];if(!detected.length){await solveOriginalImage();return}showQuestions(detected);return}
       const confirmed=$('question-correction').value.trim();if(!confirmed){notify('Type or correct the question before solving.');return}
       button.querySelector('span').textContent='Solving the confirmed question…';document.body.classList.remove('intake');document.querySelector('.lesson').hidden=false;$('lesson-content').innerHTML='<div class="loading"><div class="loading-orbit"></div><p>Working through the question you confirmed…</p></div>';
       const fd=new FormData();fd.append('subject',window.subj||'auto');fd.append('text',confirmed);fd.append('image',input.files[0]);const response=await fetch('/api/analyze',{method:'POST',body:fd}),result=await response.json();if(!response.ok)throw new Error(result.error||'Something went wrong.');result.studentQuestion=confirmed;result.question||=confirmed;result.multipleQuestionsDetected=questions.length>1;result.questionCount=questions.length;result.selectedQuestionNumber=selected+1;render(result);

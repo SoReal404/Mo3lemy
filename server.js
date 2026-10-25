@@ -217,4 +217,5 @@ app.post('/api/speech', async (req, res) => {
   }
 });
 
-app.listen(process.env.PORT || 3000, () => console.log(`مُعلمي is ready at http://localhost:${process.env.PORT || 3000}`));
+export default app;
+if (!process.env.VERCEL) app.listen(process.env.PORT || 3000, () => console.log(`مُعلمي is ready at http://localhost:${process.env.PORT || 3000}`));
