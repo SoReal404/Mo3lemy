@@ -34,6 +34,15 @@ export default function App() {
       setNotice(result.events.length ? `${result.events.map(event => event.title).join(' + ')} · ${result.events.at(-1)?.equation}` : `${reagentName} added to ${current.label}.`);
     } catch (error) { setNotice(error instanceof Error ? error.message : 'Could not add that chemical.'); }
   };
+  const selectChemical = (id: ChemicalId) => {
+    setChemicalId(id);
+    const definition = CHEMICALS.find(item => item.id === id);
+    setDose(definition?.doseLabel === 'g' ? 0.15 : definition?.category === 'Indicators' ? 1 : 5);
+  };
+  const quickAddChemical = (id: ChemicalId, amount: number) => {
+    selectChemical(id);
+    pour(vessel.id, id, amount);
+  };
 
   const addVessel = (kind: VesselKind) => {
     if (containersRef.current.length >= MAX_VESSELS) { setNotice(`The bench holds up to ${MAX_VESSELS} vessels. Remove one to make room.`); return; }
@@ -85,7 +94,7 @@ export default function App() {
       <div className="lab-intro-aside"><span>✳</span><div><b>Start with a prediction</b><small>What do you think will happen when these chemicals meet?</small></div></div>
     </section>
     <section className="lab-workspace" aria-label="Virtual chemistry lab">
-      <ChemicalShelf selected={chemicalId} onSelect={setChemicalId} />
+      <ChemicalShelf selected={chemicalId} onSelect={selectChemical} onAdd={quickAddChemical} />
       <section className="lab-panel bench-panel">
         <div className="panel-heading"><div><span className="eyebrow">02 · THE LAB BENCH</span><h2>Experiment workspace</h2></div><button className="text-button" type="button" onClick={resetAll}>Reset bench <span>↺</span></button></div>
         <div className="bench-toolbar"><div className="vessel-buttons">{vesselKinds.map(kind => <button key={kind} type="button" disabled={containers.length >= MAX_VESSELS} title={containers.length >= MAX_VESSELS ? `Maximum ${MAX_VESSELS} vessels` : `Add ${kind}`} onClick={() => addVessel(kind)}><span>＋</span>{kind}</button>)}</div><div className="export-actions"><button className="text-button screenshot-button" type="button" onClick={saveScreenshot}>⇩ Save image</button><button className="report-button" type="button" onClick={saveReport}>▤ Export colorful PDF</button></div></div>

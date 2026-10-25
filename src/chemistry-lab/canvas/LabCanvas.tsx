@@ -65,9 +65,12 @@ export const LabCanvas = forwardRef<HTMLCanvasElement, Props>(function LabCanvas
         ctx.globalAlpha = .82; ctx.fillStyle = liquid;
         ctx.beginPath(); ctx.moveTo(centerX - size, liquidLevel + wave); ctx.quadraticCurveTo(centerX - size * .48, liquidLevel - wave2, centerX, liquidLevel + wave2); ctx.quadraticCurveTo(centerX + size * .5, liquidLevel + wave * .6, centerX + size, liquidLevel - wave); ctx.lineTo(centerX + size, base + 12); ctx.lineTo(centerX - size, base + 12); ctx.closePath(); ctx.fill();
         ctx.globalAlpha = .42; ctx.strokeStyle = '#eef9f4'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(centerX - size * .36, liquidLevel + wave); ctx.quadraticCurveTo(centerX, liquidLevel + wave2, centerX + size * .36, liquidLevel - wave); ctx.stroke();
-        if (vessel.solidsMol['Cu(OH)2(s)']) {
-          ctx.globalAlpha = .84; ctx.fillStyle = '#6bbad9';
-          ctx.beginPath(); ctx.ellipse(centerX, base - 16, size * .28, 7, 0, 0, Math.PI * 2); ctx.fill();
+        const precipitates = Object.entries(vessel.solidsMol).filter(([name, amount]) => name !== 'Mg(s)' && name !== 'Zn(s)' && name !== 'Fe(s)' && name !== 'Al(s)' && name !== 'Cu(s)' && amount > 1e-8);
+        if (precipitates.length) {
+          precipitates.forEach(([name], solidIndex) => {
+            ctx.globalAlpha = .84; ctx.fillStyle = name.includes('Cu(OH)2') ? '#6bbad9' : name.includes('AgI') ? '#e3d06c' : '#e7ebe5';
+            ctx.beginPath(); ctx.ellipse(centerX + (solidIndex - (precipitates.length - 1) / 2) * size * .13, base - 16 - (solidIndex % 2) * 2, size * .2, 6, 0, 0, Math.PI * 2); ctx.fill();
+          });
         }
         const cloud = bubbles.get(vessel.id) || [];
         const lastGasEvent = [...vessel.reactions].reverse().find(reaction => reaction.gasMoles > 0);
