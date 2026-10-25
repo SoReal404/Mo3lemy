@@ -19,10 +19,13 @@
 | --- | --- |
 | **Math** | Step-by-step solutions, rendered notation, and interactive graphs for supported problems. |
 | **Chemistry** | Reaction and concept explanations, with focused interactive chemistry views. |
+| **Chemistry Lab** | A separate React + TypeScript sandbox with draggable reagents, beakers/flasks/test tubes, ion concentrations, pH, temperature estimates, indicators, animated gas bubbles, and balanced reaction equations. |
 | **Arabic grammar** | Word-by-word إعراب, case highlighting, and explanations of the grammatical rule. |
 | **Any subject** | Upload a question photo, review detected text, choose a question, and ask for a step to be explained again. |
 
-The interactive board is a dedicated workspace. Use the available controls to explore a graph or model, annotate it, and reset it to the solution state.
+The interactive board is a dedicated workspace. Use the available controls to explore a graph or model, annotate it, and reset it to the solution state. Open the chemistry sandbox from **Chemistry Lab** in the main navigation or visit `/chemistry-lab/`.
+
+The lab code is isolated from the lesson UI: `src/chemistry-lab/engine/ChemistryEngine.ts` owns solution state and stoichiometric updates, `src/chemistry-lab/canvas/LabCanvas.tsx` draws the bench and bubble particles, and `src/chemistry-lab/components/` contains the shelf and live analysis panels. Vite builds the React/TypeScript page into `public/chemistry-lab/` for Express and Vercel to serve.
 
 ## 🚀 Run locally
 
@@ -36,7 +39,7 @@ npm start
 
 Open [http://localhost:3000](http://localhost:3000). If you already have a `.env`, keep it and edit its values instead of copying the example over it.
 
-The demo lessons work without API keys. Image analysis needs a Gemini API key. Voice lessons also need an ElevenLabs key.
+The demo lessons work without API keys. Image analysis needs a Gemini API key. Voice lessons also need an ElevenLabs key. The interactive chemistry lab runs locally in the browser and does not need an AI key.
 
 ## 🔐 Configure API keys
 
@@ -68,7 +71,8 @@ Vercel Hobby is for personal, non-commercial projects. Anyone who can access a s
 ## 🧰 Built with
 
 - Node.js and Express
-- Vanilla JavaScript, HTML, and CSS
+- Vanilla JavaScript, HTML, and CSS for the main lesson experience
+- React, TypeScript, and Vite for the standalone chemistry lab
 - Google Gemini for reading and explaining questions
 - KaTeX for mathematics notation
 - ElevenLabs for optional voice lessons
