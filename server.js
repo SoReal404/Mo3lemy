@@ -13,6 +13,21 @@ app.use((req, res, next) => { if (process.env.ALLOWED_ORIGIN) { res.set({ 'Acces
 // Cost guard: per-IP hourly cap on paid endpoints (RATE_LIMIT_PER_HOUR, default 30).
 const hits = new Map();
 app.use(['/api/analyze', '/api/speech', '/api/explain', '/api/read-image'], (req, res, next) => { const k = req.ip, now = Date.now(), cap = Number(process.env.RATE_LIMIT_PER_HOUR) || 30; const list = (hits.get(k) || []).filter(t => now - t < 36e5); if (list.length >= cap) return res.status(429).json({ error: 'Hourly limit reached. Please try again later.' }); list.push(now); hits.set(k, list); next(); });
+// The chemistry app ships fingerprinted assets per deployment. Never let a browser reuse
+// an old index.html based on a timestamp/ETag that may be identical between Vercel builds.
+app.use('/chemistry-lab', express.static(path.join(root, 'public', 'chemistry-lab'), {
+  etag: false,
+  lastModified: false,
+  setHeaders(res, filePath) {
+    if (path.extname(filePath) === '.html') {
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+    } else {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    }
+  },
+}));
 app.use(express.static(path.join(root, 'public')));
 app.use(express.json({ limit: '20kb' }));
 
