@@ -1,6 +1,6 @@
-export type ChemicalId = 'hcl' | 'naoh' | 'phenolphthalein' | 'universal' | 'magnesium' | 'zinc' | 'copper-sulfate';
+export type ChemicalId = 'hcl' | 'nitric-acid' | 'sulfuric-acid' | 'naoh' | 'koh' | 'calcium-hydroxide' | 'phenolphthalein' | 'universal' | 'magnesium' | 'zinc' | 'iron' | 'copper-sulfate' | 'silver-nitrate' | 'barium-chloride' | 'sodium-carbonate' | 'iron-chloride' | 'potassium-iodide';
 export type VesselKind = 'Beaker' | 'Erlenmeyer flask' | 'Test tube';
-export type IonId = 'H+' | 'Cl-' | 'Na+' | 'OH-' | 'Cu2+' | 'SO4_2-' | 'Mg2+' | 'Zn2+';
+export type IonId = string;
 
 export interface ChemicalDefinition {
   id: ChemicalId;
@@ -10,6 +10,10 @@ export interface ChemicalDefinition {
   color: string;
   stockMolarity?: number;
   molarMass?: number;
+  ionComposition?: Record<string, number>;
+  solidKey?: string;
+  acidEquivalents?: number;
+  baseEquivalents?: number;
   doseLabel: string;
   shortDescription: string;
 }
@@ -21,6 +25,7 @@ export interface ReactionRecord {
   detail: string;
   heatJ: number;
   gasMoles: number;
+  gasSpecies?: string;
   precipitate?: string;
   at: number;
 }
@@ -32,9 +37,11 @@ export interface ContainerState {
   volumeMl: number;
   temperatureC: number;
   ionsMol: Record<IonId, number>;
-  solidsMol: Partial<Record<'Mg(s)' | 'Zn(s)' | 'Cu(OH)2(s)', number>>;
+  solidsMol: Record<string, number>;
   indicators: ChemicalId[];
   gasMoles: number;
+  gasBySpecies: Record<string, number>;
+  gasSpecies?: string;
   reactions: ReactionRecord[];
 }
 

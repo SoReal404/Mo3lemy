@@ -44,9 +44,11 @@ export const LabCanvas = forwardRef<HTMLCanvasElement, Props>(function LabCanvas
       ctx.fillStyle = '#34483d'; ctx.fillRect(0, height * .79, width, 2);
       ctx.fillStyle = '#7b9182'; ctx.font = '10px "DM Mono", monospace'; ctx.fillText('LAB BENCH · DRAG A REAGENT TO A VESSEL', 22, 26);
 
+      const now = performance.now();
       items.forEach((vessel, index) => {
         const centerX = width * (index + 1) / (items.length + 1);
-        const size = vessel.kind === 'Test tube' ? 62 : vessel.kind === 'Erlenmeyer flask' ? 126 : 112;
+        const defaultSize = vessel.kind === 'Test tube' ? 62 : vessel.kind === 'Erlenmeyer flask' ? 126 : 112;
+        const size = Math.min(defaultSize, width / (items.length + 1) * .68);
         const top = height * .24;
         const base = height * .76;
         const h = base - top;
@@ -58,8 +60,11 @@ export const LabCanvas = forwardRef<HTMLCanvasElement, Props>(function LabCanvas
         const color = liquidColor(vessel);
         const liquid = ctx.createLinearGradient(centerX - size / 2, liquidLevel, centerX + size / 2, base);
         liquid.addColorStop(0, color); liquid.addColorStop(1, tint(color, -22));
-        ctx.globalAlpha = .82; ctx.fillStyle = liquid; ctx.fillRect(centerX - size, liquidLevel, size * 2, base - liquidLevel + 20);
-        ctx.globalAlpha = .5; ctx.fillStyle = '#eef9f4'; ctx.fillRect(centerX - size * .38, liquidLevel + 3, size * .76, 2);
+        const wave = Math.sin(now / 510 + index * 1.7) * 2.3;
+        const wave2 = Math.sin(now / 740 + index) * 1.4;
+        ctx.globalAlpha = .82; ctx.fillStyle = liquid;
+        ctx.beginPath(); ctx.moveTo(centerX - size, liquidLevel + wave); ctx.quadraticCurveTo(centerX - size * .48, liquidLevel - wave2, centerX, liquidLevel + wave2); ctx.quadraticCurveTo(centerX + size * .5, liquidLevel + wave * .6, centerX + size, liquidLevel - wave); ctx.lineTo(centerX + size, base + 12); ctx.lineTo(centerX - size, base + 12); ctx.closePath(); ctx.fill();
+        ctx.globalAlpha = .42; ctx.strokeStyle = '#eef9f4'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(centerX - size * .36, liquidLevel + wave); ctx.quadraticCurveTo(centerX, liquidLevel + wave2, centerX + size * .36, liquidLevel - wave); ctx.stroke();
         if (vessel.solidsMol['Cu(OH)2(s)']) {
           ctx.globalAlpha = .84; ctx.fillStyle = '#6bbad9';
           ctx.beginPath(); ctx.ellipse(centerX, base - 16, size * .28, 7, 0, 0, Math.PI * 2); ctx.fill();
@@ -98,10 +103,17 @@ export const LabCanvas = forwardRef<HTMLCanvasElement, Props>(function LabCanvas
   };
 
   const pointVessel = (event: React.MouseEvent<HTMLCanvasElement>) => {
-    const canvas = event.currentTarget, rect = canvas.getBoundingClientRect(), x = event.clientX - rect.left;
+    const canvas = event.currentTarget, rect = canvas.getBoundingClientRect(), x = event.clientX - rect.left, y = event.clientY - rect.top;
     const items = stateRef.current.containers;
-    const index = Math.max(0, Math.min(items.length - 1, Math.round((x / rect.width) * items.length - .5)));
-    return items[index];
+    const benchWidth = rect.width, benchHeight = rect.height;
+    return items.find((item, index) => {
+      const centerX = benchWidth * (index + 1) / (items.length + 1);
+      const baseSize = item.kind === 'Test tube' ? 62 : item.kind === 'Erlenmeyer flask' ? 126 : 112;
+      const size = Math.min(baseSize, benchWidth / (items.length + 1) * .68);
+      const top = benchHeight * .24 + 23, bottom = benchHeight * .76;
+      const halfWidth = item.kind === 'Erlenmeyer flask' ? size * .5 : item.kind === 'Test tube' ? size * .3 : size * .42;
+      return x >= centerX - halfWidth && x <= centerX + halfWidth && y >= top && y <= bottom;
+    });
   };
 
   return <canvas ref={setRefs} className="lab-bench-canvas" aria-label="Interactive chemistry bench. Click a vessel to pour the selected chemical." onClick={event => {

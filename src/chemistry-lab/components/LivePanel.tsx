@@ -13,7 +13,7 @@ export function LivePanel({ vessel, onReset }: Props) {
       <div className="metric-card ph-card"><span>pH</span><b style={{ color: pHColor }}>{pH.toFixed(2)}</b><div className="ph-track"><i style={{ left: `${(pH / 14) * 100}%`, background: pHColor }} /></div><small>{pH < 6.5 ? 'ACIDIC' : pH < 7.5 ? 'NEUTRAL' : 'BASIC'}</small></div>
       <div className="metric-card"><span>Temperature</span><b>{vessel.temperatureC.toFixed(1)}<i>°C</i></b><small>EST. SOLUTION TEMP</small></div>
       <div className="metric-card"><span>Total volume</span><b>{vessel.volumeMl.toFixed(1)}<i>mL</i></b><small>INCLUDING REAGENTS</small></div>
-      <div className="metric-card"><span>Gas formed</span><b>{(vessel.gasMoles * 1000).toFixed(2)}<i>mmol</i></b><small>H₂ COLLECTED</small></div>
+      <div className="metric-card"><span>Gas formed</span><b>{(vessel.gasMoles * 1000).toFixed(2)}<i>mmol</i></b><small>{vessel.gasSpecies ? `${vessel.gasSpecies} COLLECTED` : 'NO GAS DETECTED'}</small></div>
     </div>
     <section className="data-section"><div className="section-heading"><h3>Molecular inventory</h3><span>{ionConcentrations(vessel).length} dissolved ions</span></div>
       <div className="contents-list">{contentsOf(vessel).map(item => <div className="content-row" key={item}><span className="content-orb" />{item}</div>)}</div>
