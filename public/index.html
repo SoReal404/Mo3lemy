@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#111815">
+  <title>مُعلمي — understand the why</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=Amiri:wght@400;700&family=Noto+Naskh+Arabic:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/vendor/katex/katex.min.css"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/landing.css">
+</head>
+<body>
+  <header class="topbar"><a class="brand" href="#"><span class="brand-mark"><svg viewBox="0 0 28 28" aria-hidden="true"><path d="M7 8.5h14M7 14h14M7 19.5h8"/><circle cx="20.5" cy="19.5" r="2"/></svg></span><span class="brand-name" lang="ar" dir="rtl">مُعلمي</span></a><div class="top-center"><span class="top-nav active">LEARN</span><span class="top-nav">YOUR NOTEBOOK</span></div><div class="top-right"><span id="mode-pill" class="mode-pill" title="Gemini API status"><i></i> CHECKING GEMINI</span><span id="elevenlabs-pill" class="mode-pill" title="ElevenLabs API status"><i></i> CHECKING VOICE</span><button class="avatar" aria-label="Learning space">م</button></div></header>
+  <main>
+    <section class="intro"><div class="intro-copy-block"><div class="eyebrow"><span class="sparkle">✳</span> YOUR PERSONAL STUDY SPACE</div><h1>Make the tricky bits<br><em>make sense.</em></h1><p class="intro-copy">Drop in a problem. We'll slow it down, show you why,<br class="desktop-break"> and let you play with the idea.</p></div><div class="hero-doodle" aria-hidden="true"><span class="doodle-orbit orbit-one"></span><span class="doodle-orbit orbit-two"></span><span class="doodle-star">✳</span><span class="doodle-chip chip-one">x + 2</span><span class="doodle-chip chip-two">÷ 2</span><span class="doodle-dot dot-one"></span><span class="doodle-dot dot-two"></span></div></section>
+    <section class="workspace">
+      <aside class="upload-card card"><div class="section-label"><span class="step-index">01</span> ASK ANYTHING</div>
+<div class="subject-tabs" role="tablist"><button class="subject-tab active" data-s="auto" style="--c:#cfd8cf">✦ Auto</button><button class="subject-tab" data-s="math" style="--c:#5eb5ff">Math</button><button class="subject-tab" data-s="chem" style="--c:#ff8a5c">Chemistry</button><button class="subject-tab" data-s="arabic" style="--c:#e7c46a">العربية</button></div>
+<div class="composer"><div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Add a photo of your problem"><input id="file-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+<div id="upload-empty"><div class="dz-icons"><span>📷</span><span>🖼</span><span>⌘V</span></div><strong>Snap, drop or paste a photo</strong><small>Handwriting works · PNG, JPG, WEBP · max 8 MB</small></div>
+<div id="upload-preview" hidden><div id="crop-stage"><img id="preview-img" alt="Uploaded problem"><div id="crop-selection" hidden><button class="crop-handle nw" data-handle="nw" aria-label="Resize crop from top left"></button><button class="crop-handle ne" data-handle="ne" aria-label="Resize crop from top right"></button><button class="crop-handle sw" data-handle="sw" aria-label="Resize crop from bottom left"></button><button class="crop-handle se" data-handle="se" aria-label="Resize crop from bottom right"></button></div></div><button id="remove-image" type="button" class="remove-image" aria-label="Remove image">×</button><div class="crop-controls"><span id="crop-help">Want only part of the photo? Start an optional crop.</span><button id="crop-start" type="button">Crop a question</button><button id="crop-apply" type="button" disabled>Apply crop</button><button id="crop-reset" type="button" hidden>Cancel crop</button></div></div></div>
+</div>
+<div id="question-review" class="question-review" hidden aria-live="polite"></div>
+<button class="solve-button" id="solve-button"><span>Explain it to me</span><span aria-hidden="true">↗</span></button>
+<div class="upload-note"><span class="note-dot"></span> The subject is detected automatically. Your image is only used to read the problem.</div>
+<button class="sample-chip ex-link" data-sample="derivative">See a worked example <span>↗</span></button></aside>
+      <section class="lesson card" aria-live="polite"><div class="lesson-head"><div class="section-label"><span class="step-index">02</span> THE BIG IDEA</div><div class="lesson-head-actions"><button id="new-question" type="button">＋ New question</button><span id="lesson-tag" class="lesson-tag"><span>✳</span> SAMPLE</span></div></div><div id="lesson-content"></div></section>
+    </section>
+    <footer><span>Made for the curious.</span><span class="footer-right">ONE STEP AT A TIME <span>✳</span></span></footer>
+  </main><div id="toast" role="status" class="toast"></div><script src="/vendor/katex/katex.min.js" defer></script><script src="/extras.js" defer></script><script src="/app.js" defer></script><script src="/flow.js" defer></script><script src="/landing.js" defer></script>
+</body></html>
